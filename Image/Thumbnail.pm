@@ -3,7 +3,7 @@ package Image::Thumbnail;
 use Carp;
 use strict;
 use warnings;
-our $VERSION = '0.41';	# NOT YET ON CPAN; ImageMagick error messages; optimize
+our $VERSION = '0.42';
 
 =head1 NAME
 
@@ -381,7 +381,13 @@ sub create_imagemagick { my $self=shift;
 		warn "...from file $self->{inputpath}" if $self->{CHAT};
 		$self->{object} = Image::Magick->new;
 		$self->{img} = $self->{object}->Read($self->{inputpath});
+		if (not ref $self->{img}){
+			$self->{error} = $self->{img};
+			warn "# ".$self->{error} if $self->{chat};
+			return undef;
+		}
 	}
+
 	($self->{thumb},$self->{x},$self->{y}) = $self->imagemagick_thumb;
 	if ($self->{outputpath}){
 		warn "Writing to $self->{outputpath}" if $self->{CHAT};

@@ -29,10 +29,10 @@ _STOP_
 } else {
 	WriteMakefile(
 		'NAME'		=> 'Image::Thumbnail',
-		'VERSION_FROM'	=> 'Thumbnail.pm', # finds $VERSION
+		'VERSION_FROM'	=> 'Image/Thumbnail.pm', # finds $VERSION
 		'PREREQ_PM'		=> {Test::Harness=>0.1,}, # e.g., Module::Name => 1.1
 		($] >= 5.005 ?    ## Add these new keywords supported since 5.005
-		  (ABSTRACT_FROM => 'Thumbnail.pm', # retrieve abstract from module
+		  (ABSTRACT_FROM => 'Image/Thumbnail.pm', # retrieve abstract from module
 		   AUTHOR     => 'Lee Goddard <lgoddard@cpan.org>') : ()),
 	);
 }

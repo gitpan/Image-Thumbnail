@@ -1,24 +1,32 @@
 # gdf - Test GD supply a filename write to file
+use lib "..";
 use strict;
 our $VERSION = sprintf("%d.%02d", q$Revision: 0.01 $ =~ /(\d+)\.(\d+)/);
-use Test;
-BEGIN { plan tests => 5 };
-use Image::Thumbnail;
-print "ok 1\n";
+use Test::More;
+
+use Cwd;
+my $cwd = cwd."/";
+
+eval'require GD';
+if ( $@) {
+	 plan skip_all => "Skip GD tests - GD not installed";
+} else {
+	plan tests => 4;
+}
+use_ok ("Image::Thumbnail");
 
 my $t = new Image::Thumbnail(
 #	CHAT=>1,
 	module => "GD",
-	inputpath => "t/test.jpg",
+	inputpath => $cwd."t/test.jpg",
 	size=>55,
 	create=>1,
-	outputpath=>'t/test_t.jpg',
+	outputpath=> $cwd.'t/test_t.jpg',
 );
-print "ok 2\n";
-print $t->{x}==55? "ok" : "not ok"; print " 3\n";
-print $t->{y}==49? "ok" : "not ok"; print " 4\n";
-unlink("t/test_t.jpg") or print "not ok 5\n";
-print "ok 5\n";
-exit;
+isa_ok($t, "Image::Thumbnail");
+
+ok( $t->{x}==55,"x");
+ok( $t->{y}==49, "y");
+unlink($cwd."t/test_t.jpg");
 
 

@@ -1,4 +1,5 @@
 #! perl
+use lib "..";
 our $VERSION = sprintf("%d.%02d", q$Revision: 0.1 $ =~ /(\d+)\.(\d+)/);
 use strict;
 use Test::Harness;
