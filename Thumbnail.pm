@@ -3,11 +3,11 @@ package Image::Thumbnail;
 use Carp;
 use strict;
 use warnings;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 NAME
 
-Image::Magick - GD/ImageMagick thumbnail images.
+Image::Thumbnail - GD/ImageMagick thumbnail images.
 
 =head1 SYNOPSIS
 
@@ -473,6 +473,8 @@ None by default.
 =head1 CHANGES
 
 Version 0.02 (10 June 2002): added C<attr> and C<depth> fields.
+
+Version 0.03 (10 June 2002): tardist bug fixed.
 
 =head1 SEE ALSO
 

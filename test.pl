@@ -5,13 +5,16 @@ use Test::Harness;
 $Test::Harness::verbose = '';
 $Test::Harness::switches = '';
 
-runtests(
-	't/imf.pl',		# image magick file
-	't/imo.pl',		# image magick object
-	't/imfa.pl',	# image magick file with attributes
-	't/gdo.pl',		# gd from gd object
-	't/gdf.pl',		# gd from file
+exit;
+
+__END__
+
+runtests();
+	't/imf.t',		# image magick file
+	't/imo.t',		# image magick object
+	't/imfa.t',	# image magick file with attributes
+	't/gdo.t',		# gd from gd object
+	't/gdf.t',		# gd from file
 );
 
-exit;
 
