@@ -1,0 +1,11 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+test.pl
+Thumbnail.pm
+t/gdf.pl
+t/gdo.pl
+t/imf.pl
+t/imo.pl
+t/test.jpg
