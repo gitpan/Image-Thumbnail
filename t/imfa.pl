@@ -13,7 +13,6 @@ my $t = new Image::Thumbnail(
 	outputpath=>'t/test_t.jpg',
 	attr=> {
 		antialias => 'true',
-		comment	  => 'An Image::Thumbnail test',
 	}
 );
 if ($t->{x}){

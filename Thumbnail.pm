@@ -3,11 +3,11 @@ package Image::Thumbnail;
 use Carp;
 use strict;
 use warnings;
-our $VERSION = '0.031';
+our $VERSION = '0.41';	# NOT YET ON CPAN; ImageMagick error messages; optimize
 
 =head1 NAME
 
-Image::Thumbnail - GD/ImageMagick thumbnail images simply.
+Image::Thumbnail - GD/ImageMagick thumbnail images with ease.
 
 =head1 SYNOPSIS
 
@@ -20,7 +20,15 @@ Image::Thumbnail - GD/ImageMagick thumbnail images simply.
 		create     => 1,
 		inputpath  => 'test.jpg',
 		outputpath => 'test_t.jpg',
-    );
+	);
+
+	my $t = new Image::Thumbnail(
+		size       => 55,
+		create     => 1,
+		module	   => "Image::Magick",
+		object	   => $imageObject,
+		outputpath => 'test_t.jpg',
+	);
 
 	# Create a thumbnail from 'test.jpg' as 'test_t.jpg'
 	# using GD.
@@ -30,7 +38,7 @@ Image::Thumbnail - GD/ImageMagick thumbnail images simply.
 		create     => 1,
 		inputpath  => 'test.jpg',
 		outputpath => 'test_t.jpg',
-    );
+	);
 
 	# Create a thumbnail as 'test_t.jpg' from an ImageMagick object
 	# using ImageMagick, or GD.
@@ -39,7 +47,7 @@ Image::Thumbnail - GD/ImageMagick thumbnail images simply.
 		create     => 1,
 		object     => $my_image_magick_object,
 		outputpath => 'test_t.jpg',
-    );
+	);
 
 	# Create four more of ever-larger sizes
 	for (1..4){
@@ -54,8 +62,11 @@ Image::Thumbnail - GD/ImageMagick thumbnail images simply.
 This module uses the ImageMagick or GD libraries to easily make thumbnail images from
 files or objects from the specified library.
 
-I made C<Image::GD::Thumbnail> a while ago for myself, put on CPAN because I need
-to get to it elsewhere and it's cheap FTP. A few people asked for a ImageMagick
+Thumbnails can be created, and either saved as image files, or
+accessed as objects: see L<create>.
+
+I made C<Image::GD::Thumbnail> a while ago for myself, put it on CPAN because I need
+to get to it elsewhere and it's cheap storage. A few people asked for a ImageMagick
 version, so I made that, and then put them together in this.
 
 =cut
@@ -135,11 +146,24 @@ Sets colour depth in ImageMagick - GD only supports 8-bit.
 The ImageMagick manpage (see L<http://www.imagemagick.org/www/ImageMagick.html#opti>).
 says:
 
+=item density
+
+ImageMagick only: sets the pixel density.
+Must be a valid ImageMagick 'geometry' value (that is,
+two numbers giving the I<x> and I<y> dimensions, delimited
+by a lower-case I<x>.
+Default value is C<96x96>.
+
+=item quality
+
+ImageMagick only: an integer from 1 to 100 to specify
+the thumbnail quality. Defaults to 50.
+
 =item attr
 
 If you are using ImageMagick, this field should contain
 a hash of ImageMagick attributes to pass to the ImageMagick
-C<set> command when the thumbnail is created. Any errors these
+C<Set> command when the thumbnail is created. Any errors these
 may generate are not yet caught.
 
 =cut
@@ -149,13 +173,21 @@ may generate are not yet caught.
 # paramters for those methods (naturally excluding the object
 # reference).
 
+# =over 4
+
+# This is the number of bits in a color sample within
+#a pixel. The only acceptable values are 8 or 16. Use this
+#option to specify the depth of raw images whose depth is
+#unknown such as GRAY, RGB, or CMYK, or to change the
+#depth of any image after it has been read.
+
+=head2 PARAMETERS SET
+
 =over 4
 
-This is the number of bits in a color sample within
-a pixel. The only acceptable values are 8 or 16. Use this
-option to specify the depth of raw images whose depth is
-unknown such as GRAY, RGB, or CMYK, or to change the
-depth of any image after it has been read.
+=item x,y
+
+The dimension of the thumbnail produced.
 
 =back
 
@@ -166,6 +198,9 @@ Put any value in this field for real-time process info.
 =back
 
 =head2 ERRORS
+
+As of version 0.4, any errors are stored in the fields
+C<error>, warnings in C<warning> - at least for C<Image::Magick>.
 
 Any errors will be printed to C<STDOUT>. If they completely
 prevent processing, they will be fatal (C<croak>ed). If
@@ -197,6 +232,8 @@ sub new { my $class = shift;
 	my $self = bless {}, $class;
 
 	# Fields that have default values which can be over-written:
+	$self->{density} = '96x96';
+	$self->{quality} = 50;
 
 	# Set/overwrite default fields with user's values:
 	foreach (keys %args) {
@@ -208,6 +245,9 @@ sub new { my $class = shift;
 	$self->{thumb}	= '';
 
 	# Croak on user errors
+	if ($self->{density} !~ /^\d+x\d+$/){
+		croak "The 'density' param expects a geometry argument, such as 128x128"
+	}
 	croak "No 'size' paramter" if not $self->{size};
 	if ( $self->{object} and $self->{inputpath} ){
 		croak "You cannot supply both an 'object' field and a 'inputpath' field"
@@ -266,7 +306,7 @@ sub set_mod { my ($self,$try) = (shift,shift);
 		warn "Requiring GD" if $self->{CHAT};
 		eval ('use GD;');
 		if ($@){
-			warn "Error requring GD:\n".@$;
+			warn "Error requring GD:\n".$@;
 			return undef;
 		}
 		warn "GD OK" if $self->{CHAT};
@@ -275,7 +315,7 @@ sub set_mod { my ($self,$try) = (shift,shift);
 		warn "Requiring Image::Magick" if $self->{CHAT};
 		eval ('use Image::Magick');
 		if ($@){
-			warn "Error requring Image::Magick:\n".@$;
+			warn "Error requring Image::Magick:\n".$@;
 			return undef;
 		}
 		warn "Image::Magick OK" if $self->{CHAT};
@@ -288,11 +328,33 @@ sub set_mod { my ($self,$try) = (shift,shift);
 	return $self->{module};
 }
 
+
 =head1 METHOD create
 
 Creates a thumbnail using the supplied object.
-Called automatically if you construct with the
+This method is called automatically if you construct with the
 C<create> field flagged.
+
+Sets the following fields:
+
+=over 4
+
+=item module
+
+Will contain the name of the module used (set by this module
+if not by the user);
+
+=item object
+
+Will contain an instance of the module used;
+
+=item thumb
+
+Will contain the thumbnail image.
+
+=back
+
+Returns c<undef> on failure.
 
 =cut
 
@@ -309,6 +371,7 @@ sub create { my $self = shift;
 	return $_;
 }
 
+
 #
 # METHOD create_imagemagick
 #
@@ -319,23 +382,11 @@ sub create_imagemagick { my $self=shift;
 		$self->{object} = Image::Magick->new;
 		$self->{img} = $self->{object}->Read($self->{inputpath});
 	}
-
-	# Set depth
-	if ($self->{depth}){
-		$self->{object}->Set('depth'=>$self->{depth});
-	}
-	# Other attributes
-	if ($self->{attr}){
-		foreach my $key (keys %{$self->{attr}}){
-			$self->{object}->Set($key=>$self->{attr}->{$key});
-			# Catch errors?
-		}
-	}
-
 	($self->{thumb},$self->{x},$self->{y}) = $self->imagemagick_thumb;
 	if ($self->{outputpath}){
 		warn "Writing to $self->{outputpath}" if $self->{CHAT};
-		$self->{object}->Write($self->{outputpath});
+		$_ = $self->{object}->Write($self->{outputpath});
+		$self->set_errors($_);
 	}
 	warn "Done Image::Magick: ",$self->{x}," ",$self->{y} if $self->{CHAT};
 	return 1;
@@ -409,8 +460,6 @@ sub create_gd { my $self=shift;
 
 
 
-
-
 #
 # Sets our inputtype field to the file type (jpeg, etc)
 # Includes unsupported image types.
@@ -444,8 +493,14 @@ sub get_img_type { my ($self,$handle)=(shift,shift);
 	$self->{inputtype} = $id;
 }
 
-
+#
+# Thumbnail generation
+#
 sub gd_thumb { my $self=shift;
+	if (not $self->{object}){
+		$self->{error} = "No 'object' supplied to make thumbnail from";
+		return undef;
+	}
 	my ($ox,$oy) = $self->{object}->getBounds();
 	my $r = $ox>$oy ? $ox / $self->{size} : $oy / $self->{size};
 	my $thumb = GD::Image->new($ox/$r,$oy/$r);
@@ -453,17 +508,57 @@ sub gd_thumb { my $self=shift;
 	return $thumb, sprintf("%.0f",$ox/$r), sprintf("%.0f",$oy/$r);
 }
 
+
 sub imagemagick_thumb { my $self=shift;
+	if (not $self->{object}){
+		$self->{error} = "No 'object' supplied to make thumbnail from";
+		warn $self->{error} if $self->{CHAT};
+		return undef;
+	}
 	my ($ox,$oy) = $self->{object}->Get('width','height');
-	warn "Error getting width/height!" and return undef if not $ox or not $oy;
+	if (not $ox or not $oy){
+		$self->{error} = __PACKAGE__." Could not get width/height from image";
+		warn "Error getting width/height!" if $self->{CHAT};
+		return undef
+	}
 	my $r = $ox>$oy ? $ox / $self->{size} : $oy / $self->{size};
+	$self->{object}->Set(type=>'Optimize');
 	$self->{object}->Resize(width=>$ox/$r,height=>$oy/$r);
+	if ($self->{depth}){
+		$self->{object}->Set('depth'=>$self->{depth});
+	}
+	$self->{object}->Comment("Lee Goddard's ".__PACKAGE__." $VERSION");
+	$self->{object}->Set('density',$self->{density}||'96x96');
+	$self->{object}->Set(quality=>$self->{quality}||'50');
+	$self->{object}->Set(type=>'Optimize');
+	if ($self->{attr}){
+		die "attr must be a hash reference" if ref $self->{attr} ne 'HASH';
+		foreach my $key (keys %{$self->{attr}}){
+			$self->{object}->Set($key=>$self->{attr}->{$key});
+			# Catch errors?
+		}
+	}
 	return $self->{object}, sprintf("%.0f",$ox/$r), sprintf("%.0f",$oy/$r);
+}
+
+
+#
+# Interpret $s for errors and put in warnings/errors field
+#
+sub set_errors { my ($self,$s) = (shift,shift);
+	if ($self->{module} eq 'Image::Magick'){
+		if ($s =~ /(\d+)/){
+			if ($1 <400){
+				$self->{warning}  = $s;
+			} else {
+				$self->{error} = $s;
+			}
+		}
+	}
 }
 
 1; # Satisfy 'require'
 __END__
-
 
 
 =head1 EXPORT
@@ -472,6 +567,9 @@ None by default.
 
 =head1 CHANGES
 
+Version 0.41 (15 January 2003): lots of bits,
+	including typo spotted by Sam Tregar.
+
 Version 0.02 (10 June 2002): added C<attr> and C<depth> fields.
 
 Version 0.03 (10 June 2002): tardist bug fixed.
@@ -479,8 +577,9 @@ Version 0.03 (10 June 2002): tardist bug fixed.
 =head1 SEE ALSO
 
 L<perl>,
-L<Image::Magick>, L<Image::Magick::Thumbnail>,
-L<GD>, L<Image::GD::Thumbnail>.
+L<GD>, L<Image::Magick>,
+L<Image::Magick::Thumbnail>,
+L<Image::GD::Thumbnail>.
 
 =head1 AUTHOR
 
@@ -489,7 +588,7 @@ Lee Goddard <LGoddard@CPAN.org>
 =head1 COPYRIGT
 
 Copyright (C) Lee Godadrd 2001 all rights reserved.
-Available under the same terms as Perl itself.
+Supplied under the same terms as Perl itself.
 
 =cut
 
