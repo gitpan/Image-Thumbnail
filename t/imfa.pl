@@ -1,4 +1,4 @@
-# imf - Test ImageMagick to/from file
+# imfa - Test ImageMagick to/from file with attributes
 use strict;
 our $VERSION = sprintf("%d.%02d", q$Revision: 0.02 $ =~ /(\d+)\.(\d+)/);
 use Test;
@@ -11,6 +11,10 @@ my $t = new Image::Thumbnail(
 	create=>1,
 	inputpath=>'t/test.jpg',
 	outputpath=>'t/test_t.jpg',
+	attr=> {
+		antialias => 'true',
+		comment	  => 'An Image::Thumbnail test',
+	}
 );
 if ($t->{x}){
 	print "ok 2\n";

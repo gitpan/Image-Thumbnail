@@ -1,5 +1,8 @@
 Revision history for Perl extension Image::Thumbnail.
 
+0.02  Mon Jun 10 13:54:00 2002
+	- added attr and depth fields.
+
 0.01  Fri Jun  7 17:50:40 2002
 	- original version; created by h2xs 1.21 with options
 		-X -n Image::Thumbnail

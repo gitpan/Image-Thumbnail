@@ -8,4 +8,5 @@ t/gdf.pl
 t/gdo.pl
 t/imf.pl
 t/imo.pl
+t/imfa.pl
 t/test.jpg

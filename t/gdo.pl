@@ -8,7 +8,7 @@ use GD;
 use Image::Thumbnail;
 print "ok 1\n";
 
-open IN, 't/test.jpg'  or print "not ok 2\n";
+open IN, 't/test.jpg'  or print "not ok 2\n" and die;
 my $img = GD::Image->newFromJpeg(*IN);
 close IN;
 

@@ -18,7 +18,11 @@ my $t = new Image::Thumbnail(
 	create=>1,
 	outputpath=>'test_t.jpg',
 );
-print "ok 3\n";
+if ($t->{x}){
+	print "ok 3\n";
+} else {
+	print "not ok 3\n";
+}
 print $t->{x}==55? "ok 4\n" : "not ok 4\n";
 print $t->{y}==49? "ok 5\n" : "not ok 5\n";
 unlink("test_t.jpg") or print "not ok 6\n";

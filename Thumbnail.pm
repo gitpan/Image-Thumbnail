@@ -3,11 +3,11 @@ package Image::Thumbnail;
 use Carp;
 use strict;
 use warnings;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 NAME
 
-Image::Magick - produces thumbnail images with GD or ImageMagick
+Image::Magick - GD/ImageMagick thumbnail images.
 
 =head1 SYNOPSIS
 
@@ -127,6 +127,37 @@ and to create the thumbnail in the same format. If the
 type cannot be defined (you are using C<GD>, have supplied
 the C<object> field and not the C<outputtype> field) then
 the output file format defaults to C<jpeg>.
+
+=item depth
+
+Sets colour depth in ImageMagick - GD only supports 8-bit.
+
+The ImageMagick manpage (see L<http://www.imagemagick.org/www/ImageMagick.html#opti>).
+says:
+
+=item attr
+
+If you are using ImageMagick, this field should contain
+a hash of ImageMagick attributes to pass to the ImageMagick
+C<set> command when the thumbnail is created. Any errors these
+may generate are not yet caught.
+
+=cut
+
+# If you are using GD, this field should contain a hash where
+# keys are GD method names, and values are the arrays of
+# paramters for those methods (naturally excluding the object
+# reference).
+
+=over 4
+
+This is the number of bits in a color sample within
+a pixel. The only acceptable values are 8 or 16. Use this
+option to specify the depth of raw images whose depth is
+unknown such as GRAY, RGB, or CMYK, or to change the
+depth of any image after it has been read.
+
+=back
 
 =item CHAT
 
@@ -288,6 +319,19 @@ sub create_imagemagick { my $self=shift;
 		$self->{object} = Image::Magick->new;
 		$self->{img} = $self->{object}->Read($self->{inputpath});
 	}
+
+	# Set depth
+	if ($self->{depth}){
+		$self->{object}->Set('depth'=>$self->{depth});
+	}
+	# Other attributes
+	if ($self->{attr}){
+		foreach my $key (keys %{$self->{attr}}){
+			$self->{object}->Set($key=>$self->{attr}->{$key});
+			# Catch errors?
+		}
+	}
+
 	($self->{thumb},$self->{x},$self->{y}) = $self->imagemagick_thumb;
 	if ($self->{outputpath}){
 		warn "Writing to $self->{outputpath}" if $self->{CHAT};
@@ -297,7 +341,9 @@ sub create_imagemagick { my $self=shift;
 	return 1;
 }
 
-
+#
+# METHOD create_gd
+#
 sub create_gd { my $self=shift;
 	local (*IN, *OUT);
 	warn "... with GD" if $self->{CHAT};
@@ -330,6 +376,14 @@ sub create_gd { my $self=shift;
 	if (not $self->{inputtype}){
 		$self->{outputtype} = 'jpeg';
 	}
+
+	# Call attr: eg. $im->fill(50,50,$red);
+#	if ($self->{attr}){
+#		foreach my $key (keys %{$self->{attr}}){
+#			eval ($self->{object}."->".$key."(@{$self->{attr}->{$key}})");
+#			# Catch errors?
+#		}
+#	}
 
 	# Make thumbnail
 	($self->{thumb},$self->{x},$self->{y}) = $self->gd_thumb;
@@ -412,9 +466,13 @@ __END__
 
 
 
-=head2 EXPORT
+=head1 EXPORT
 
 None by default.
+
+=head1 CHANGES
+
+Version 0.02 (10 June 2002): added C<attr> and C<depth> fields.
 
 =head1 SEE ALSO
 
