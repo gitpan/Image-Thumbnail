@@ -9,7 +9,6 @@ because I need to get to it elsewhere and it's cheap FTP. A few people
 asked for a ImageMagick version, so I made that, and then put them
 together in this.
 
-
 INSTALLATION
 
 To install this module type the following:
@@ -24,7 +23,9 @@ DOCUMENTATION
 	perldoc Image::Thumbnail
 
 COPYRIGT
-    Copyright (C) Lee Godadrd 2001 all rights reserved. Available under the
-    same terms as Perl itself.
+
+    Copyright (C) Lee Godadrd 2001 ff.
+
+    All Rights Reserved. Available under the same terms as Perl itself.
 
 

@@ -1,11 +1,12 @@
 # imf - Test GD supply an object write to file
-our $VERSION = sprintf("%d.%02d", q$Revision: 0.01 $ =~ /(\d+)\.(\d+)/);
+our $VERSION = sprintf("%d.%02d", q$Revision: 0.02 $ =~ /(\d+)\.(\d+)/);
 use lib "..";
 use strict;
 use Test::More;
 
 use Cwd;
-my $cwd = cwd."/";
+my $cwd = cwd;
+$cwd .= '/t/' if $cwd !~ /[\\\/]t[\\\/]?$/;
 
 eval'use GD';
 if ( $@) {
@@ -17,8 +18,7 @@ use_ok ("Image::Thumbnail");
 use_ok( 'GD');
 
 SKIP: {
-	skip "No test file", 4
-	unless open IN, $cwd.'t/test.jpg';
+	skip "No test file at ${cwd}/test.jpg", 4 unless open IN, $cwd.'/test.jpg';
 	my $img = GD::Image->newFromJpeg(*IN);
 	close IN;
 	isa_ok ($img, "GD::Image");

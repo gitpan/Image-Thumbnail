@@ -1,6 +1,6 @@
 # imfa - Test ImageMagick to/from file with attributes
 use strict;
-our $VERSION = sprintf("%d.%02d", q$Revision: 0.02 $ =~ /(\d+)\.(\d+)/);
+our $VERSION = sprintf("%d.%02d", q$Revision: 0.03 $ =~ /(\d+)\.(\d+)/);
 
 
 use lib "..";
@@ -8,6 +8,7 @@ use Test::More;
 
 use Cwd;
 my $cwd = cwd."/";
+$cwd .= 't/' if $cwd !~ /[\\\/]t[\\\/]?$/;
 
 eval'use Image::Magick';
 if ( $@) {
@@ -21,8 +22,8 @@ my $t = new Image::Thumbnail(
 #	CHAT=>1,
 	size=>55,
 	create=>1,
-	inputpath=>'t/test.jpg',
-	outputpath=>'t/test_t.jpg',
+	inputpath=>$cwd.'/test.jpg',
+	outputpath=>$cwd.'/test_t.jpg',
 	attr=> {
 		antialias => 'true',
 	}
@@ -35,5 +36,5 @@ isa_ok($t->{object}, "Image::Magick");
 
 ok ( defined $t->{x}, "x defined");
 ok ( $t->{x}==55, "correct x");
-ok ( $t->{y}==49, "correct y");
+ok ( $t->{y}==48, "correct y");
 unlink($cwd."t/test_t.jpg");

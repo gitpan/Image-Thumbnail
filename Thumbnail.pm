@@ -3,11 +3,11 @@ package Image::Thumbnail;
 use Carp;
 use strict;
 use warnings;
-our $VERSION = '0.42';
+our $VERSION = '0.43';
 
 =head1 NAME
 
-Image::Thumbnail - GD/ImageMagick thumbnail images with ease.
+Image::Thumbnail - simple thumbnails with GD/ImageMagick
 
 =head1 SYNOPSIS
 
@@ -23,7 +23,7 @@ Image::Thumbnail - GD/ImageMagick thumbnail images with ease.
 	);
 
 	my $t = new Image::Thumbnail(
-		size       => 55,
+		size       => "55x75",
 		create     => 1,
 		module	   => "Image::Magick",
 		object	   => $imageObject,
@@ -88,7 +88,9 @@ See the L</SYNOPSIS>.
 
 =item size
 
-The size you with the longest side of the thumbnail to be.
+The size you with the longest side of the thumbnail to be. This may
+be provided as a single integer, or as an ImageMagick-style 'geometry'
+such as C<100x120>.
 
 =back
 
@@ -275,9 +277,9 @@ sub new { my $class = shift;
 
 	# Call 'create' if requested
 	$self->create if $self->{create};
-
 	return $self;
 }
+
 
 #
 # Sometimes self-recursive
@@ -359,16 +361,18 @@ Returns c<undef> on failure.
 =cut
 
 sub create { my $self = shift;
+	my $r;
 	warn "Creating thumbnail" if $self->{CHAT};
 	if ($self->{module} eq 'Image::Magick'){
-		$_ = $self->create_imagemagick;
+		$r = $self->create_imagemagick;
 	} elsif ($self->{module} =~ /^(GD|GD::Image)$/){
-		$_ = $self->create_gd;
+		$r = $self->create_gd;
 	} else {
-		warn "Unknown module $self->{module}";
-		$_ = undef;
+		$self->{error} = "User supplied unknown module ".$self->{module};
+		warn $self->{error};
+		$r = undef;
 	}
-	return $_;
+	return $r;
 }
 
 
@@ -380,15 +384,14 @@ sub create_imagemagick { my $self=shift;
 	if (not $self->{object} or ref $self->{object} ne 'Image::Magick'){
 		warn "...from file $self->{inputpath}" if $self->{CHAT};
 		$self->{object} = Image::Magick->new;
-		$self->{img} = $self->{object}->Read($self->{inputpath});
-		if (not ref $self->{img}){
-			$self->{error} = $self->{img};
+		$self->{error} = $self->{object}->Read($self->{inputpath});
+		if ($self->{error}){
 			warn "# ".$self->{error} if $self->{chat};
 			return undef;
 		}
 	}
+	return undef unless $self->imagemagick_thumb;
 
-	($self->{thumb},$self->{x},$self->{y}) = $self->imagemagick_thumb;
 	if ($self->{outputpath}){
 		warn "Writing to $self->{outputpath}" if $self->{CHAT};
 		$_ = $self->{object}->Write($self->{outputpath});
@@ -500,40 +503,51 @@ sub get_img_type { my ($self,$handle)=(shift,shift);
 }
 
 #
-# Thumbnail generation
+# Thumbnail generatio
 #
 sub gd_thumb { my $self=shift;
 	if (not $self->{object}){
 		$self->{error} = "No 'object' supplied to make thumbnail from";
 		return undef;
 	}
-	my ($ox,$oy) = $self->{object}->getBounds();
-	my $r = $ox>$oy ? $ox / $self->{size} : $oy / $self->{size};
-	my $thumb = GD::Image->new($ox/$r,$oy/$r);
-	$thumb->copyResized($self->{object},0,0,0,0,$ox/$r,$oy/$r,$ox,$oy);
-	return $thumb, sprintf("%.0f",$ox/$r), sprintf("%.0f",$oy/$r);
+	($self->{ox}, $self->{oy}) = $self->{object}->getBounds();
+	$self->_size;
+	$self->{ratio} = $self->{ox}>$self->{oy} ?
+		$self->{ox} / $self->{ratio}
+	:	$self->{oy} / $self->{ratio};
+	my $thumb = GD::Image->new($self->{ox}/$self->{ratio}, $self->{oy}/$self->{ratio});
+	$thumb->copyResized($self->{object},0,0,0,0,
+		$self->{ox}/$self->{ratio}, $self->{oy}/$self->{ratio}, $self->{ox}, $self->{oy});
+	return $thumb, sprintf("%.0f",$self->{ox}/$self->{ratio}), sprintf("%.0f",$self->{oy}/$self->{ratio});
 }
 
 
 sub imagemagick_thumb { my $self=shift;
+
 	if (not $self->{object}){
 		$self->{error} = "No 'object' supplied to make thumbnail from";
 		warn $self->{error} if $self->{CHAT};
 		return undef;
 	}
-	my ($ox,$oy) = $self->{object}->Get('width','height');
-	if (not $ox or not $oy){
+	($self->{ox}, $self->{oy}) = $self->{object}->Get('width','height');
+	if (not $self->{ox} or not $self->{oy}){
 		$self->{error} = __PACKAGE__." Could not get width/height from image";
-		warn "Error getting width/height!" if $self->{CHAT};
+		warn $self->{error} if $self->{CHAT};
 		return undef
 	}
-	my $r = $ox>$oy ? $ox / $self->{size} : $oy / $self->{size};
+	$self->_size;
+	$self->{ratio} = $self->{ox} > $self->{oy} ?
+		$self->{ox} / $self->{ratio}
+	:	$self->{oy} / $self->{ratio};
+	$self->{x} = int( $self->{ox}/$self->{ratio} );
+	$self->{y} = int( $self->{oy}/$self->{ratio} );
+
 	$self->{object}->Set(type=>'Optimize');
-	$self->{object}->Resize(width=>$ox/$r,height=>$oy/$r);
+	$self->{object}->Resize(width=>$self->{x}, height=>$self->{y});
 	if ($self->{depth}){
 		$self->{object}->Set('depth'=>$self->{depth});
 	}
-	$self->{object}->Comment("Lee Goddard's ".__PACKAGE__." $VERSION");
+	$self->{object}->Comment("http://LeeGoddard.net ".__PACKAGE__." $VERSION");
 	$self->{object}->Set('density',$self->{density}||'96x96');
 	$self->{object}->Set(quality=>$self->{quality}||'50');
 	$self->{object}->Set(type=>'Optimize');
@@ -544,7 +558,6 @@ sub imagemagick_thumb { my $self=shift;
 			# Catch errors?
 		}
 	}
-	return $self->{object}, sprintf("%.0f",$ox/$r), sprintf("%.0f",$oy/$r);
 }
 
 
@@ -563,15 +576,27 @@ sub set_errors { my ($self,$s) = (shift,shift);
 	}
 }
 
+sub _size { my $self = shift;
+	if (my ($maxx, $maxy) = $self->{size} =~ /^(\d+)x(\d+)$/i){
+		$self->{ratio} = $self->{ox} > $self->{oy}?
+			$maxx
+		:	$maxy;
+	} else {
+		$self->{ratio} = $self->{size};
+	}
+}
+
 1; # Satisfy 'require'
 __END__
 
 
 =head1 EXPORT
 
-None by default.
+None.
 
 =head1 CHANGES
+
+Version 0.43 (17 Novemeber 2004): fixed tests, added size/geo param.
 
 Version 0.41 (15 January 2003): lots of bits,
 	including typo spotted by Sam Tregar.

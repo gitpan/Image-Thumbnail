@@ -3,10 +3,11 @@ Makefile.PL
 MANIFEST
 README
 test.pl
-Image/Thumbnail.pm
+Thumbnail.pm
 t/gdf.pl
 t/gdo.pl
 t/imf.pl
 t/imo.pl
 t/imfa.pl
 t/test.jpg
+META.yml                                 Module meta-data (added by MakeMaker)
