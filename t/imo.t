@@ -7,24 +7,33 @@ BEGIN { plan tests => 6 };
 use Image::Thumbnail;
 print "ok 1\n";
 
-my $img = new Image::Magick;
-$img->Read('t/test.jpg');
-print "ok 2\n";
+eval "require Image::Magick";
+if (!$@){
+	my $img = new Image::Magick;
+	$img->Read('t/test.jpg');
+	print "ok 2\n";
 
-my $t = new Image::Thumbnail(
-#	CHAT=>1,
-	object=>$img,
-	size=>55,
-	create=>1,
-	outputpath=>'test_t.jpg',
-);
-if ($t->{x}){
-	print "ok 3\n";
+	my $t = new Image::Thumbnail(
+	#	CHAT=>1,
+		object=>$img,
+		size=>55,
+		create=>1,
+		outputpath=>'test_t.jpg',
+	);
+	if ($t->{x}){
+		print "ok 3\n";
+	} else {
+		print "not ok 3\n";
+	}
+	print $t->{x}==55? "ok 4\n" : "not ok 4\n";
+	print $t->{y}==49? "ok 5\n" : "not ok 5\n";
+	unlink("test_t.jpg") or print "not ok 6\n";
+	print "ok 6\n";
 } else {
-	print "not ok 3\n";
+	for (2..6){
+		print "skip $_ (no Image::Magick)\n";
+	}
 }
-print $t->{x}==55? "ok 4\n" : "not ok 4\n";
-print $t->{y}==49? "ok 5\n" : "not ok 5\n";
-unlink("test_t.jpg") or print "not ok 6\n";
-print "ok 6\n";
+
+
 exit;

@@ -3,11 +3,11 @@ package Image::Thumbnail;
 use Carp;
 use strict;
 use warnings;
-our $VERSION = '0.03';
+our $VERSION = '0.031';
 
 =head1 NAME
 
-Image::Thumbnail - GD/ImageMagick thumbnail images.
+Image::Thumbnail - GD/ImageMagick thumbnail images simply.
 
 =head1 SYNOPSIS
 
