@@ -1,13 +1,25 @@
-Image/Thumbnail version 0.41
-============================
+Image/Thumbnail version 0.5
+===========================
 
-This module uses the ImageMagick or GD libraries to easily make
-thumbnail images from files or objects from the specified library.
+NAME
+    Image::Magick::Thumbnail - Produces thumbnail images with ImageMagick
 
-I made "Image::GD::Thumbnail" a while ago for myself, put on CPAN
-because I need to get to it elsewhere and it's cheap FTP. A few people
-asked for a ImageMagick version, so I made that, and then put them
-together in this.
+SYNOPSIS
+	use Image::Magick::Thumbnail;
+	# Load your source image
+	my $src = new Image::Magick;
+	$src->Read('source.jpg');
+
+	# Create the thumbnail from it, where the biggest side is 50 px
+	my ($thumb,$x,$y) = Image::Magick::Thumbnail::create($src,50);
+
+	# Save your thumbnail
+	$thumb->Write('source_thumb.jpg');
+
+	# Create another thumb, that fits into the geometry
+	my ($thumb,$x,$y) = Image::Magick::Thumbnail::create($src,'60x50');
+
+	__END__
 
 INSTALLATION
 
@@ -18,14 +30,35 @@ To install this module type the following:
    make test
    make install
 
-DOCUMENTATION
+DESCRIPTION
+    This module uses the ImageMagick library to create a thumbnail image
+    with no side bigger than you specify.
 
-	perldoc Image::Thumbnail
+    There is no OO API, since that would seem to be over-kill. The
+    subroutine "create" takes two arguments: the first is an ImageMagick
+    image object, the second is either the size in pixels you wish the
+    longest side of the image to be, or an "Image::Magick"-style 'geometry'
+    (eg "100x120") which the thumbnail must fit.
+
+    It returns an ImaegMagick image object (the thumbnail), as well as the
+    number of pixels of the *width* and *height* of the image, as integer
+    scalars.
+
+PREREQUISITES
+            Image::Magick
+
+  EXPORT
+    None by default.
+
+AUTHOR
+    Lee Goddard <LGoddard@CPAN.org>
+
+SEE ALSO
+    perl, Image::Magick, Image::GD::Thumbnail.
 
 COPYRIGT
+    Copyright (C) Lee Godadrd 2001-2005. All rights reserved. Available under the
+    same terms as Perl itself.
 
-    Copyright (C) Lee Godadrd 2001 ff.
-
-    All Rights Reserved. Available under the same terms as Perl itself.
 
 

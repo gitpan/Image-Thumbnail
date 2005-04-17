@@ -1,7 +1,11 @@
 Revision history for Perl extension Image::Thumbnail.
 
-Version 0.41 (15 January 2003): lots of bits,
-	including typo spotted by Sam Tregar.
+Version 0.5  (17 April 2005):
+	- fixed occasional geometry bug.
+
+Version 0.41 (15 January 2003):
+	- lots of bits,
+	  including typo spotted by Sam Tregar.
 
 0.02  Mon Jun 10 13:54:00 2002
 	- added attr and depth fields.

@@ -19,7 +19,7 @@ use_ok ("Image::Thumbnail");
 
 ok( -e $cwd.'/test.jpg', "Test image present");
 
-die "WRONG VERSION" if $Image::Thumbnail::VERSION != 0.43;
+die "WRONG VERSION" if $Image::Thumbnail::VERSION < 0.5;
 
 my $t = new Image::Thumbnail(
 #	CHAT=>1,

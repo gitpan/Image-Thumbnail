@@ -3,7 +3,7 @@ package Image::Thumbnail;
 use Carp;
 use strict;
 use warnings;
-our $VERSION = '0.43';
+our $VERSION = '0.5';
 
 =head1 NAME
 
@@ -43,7 +43,7 @@ Image::Thumbnail - simple thumbnails with GD/ImageMagick
 	# Create a thumbnail as 'test_t.jpg' from an ImageMagick object
 	# using ImageMagick, or GD.
 	my $t = new Image::Thumbnail(
-		size       => 55,
+		size       => "55x25",
 		create     => 1,
 		object     => $my_image_magick_object,
 		outputpath => 'test_t.jpg',
@@ -55,27 +55,23 @@ Image::Thumbnail - simple thumbnails with GD/ImageMagick
 		$t->create;
 	}
 
-	__END__
+	exit;
 
 =head1 DESCRIPTION
 
-This module uses the ImageMagick or GD libraries to easily make thumbnail images from
-files or objects from the specified library.
+This module allows you to easily make thumbnail images from
+files or objects, using either the ImageMagick or GD library.
 
-Thumbnails can be created, and either saved as image files, or
+Thumbnails can be created, and either saved as image files  or
 accessed as objects: see L<create>.
 
-I made C<Image::GD::Thumbnail> a while ago for myself, put it on CPAN because I need
+I made C<Image::GD::Thumbnail> a few years ago for myself, put it on CPAN because I need
 to get to it elsewhere and it's cheap storage. A few people asked for a ImageMagick
 version, so I made that, and then put them together in this.
-
-=cut
 
 =head1 PREREQUISITES
 
 C<Image::Magick> or C<GD>.
-
-=cut
 
 =head1 CONSTRUCTOR new
 
@@ -512,18 +508,16 @@ sub gd_thumb { my $self=shift;
 	}
 	($self->{ox}, $self->{oy}) = $self->{object}->getBounds();
 	$self->_size;
-	$self->{ratio} = $self->{ox}>$self->{oy} ?
-		$self->{ox} / $self->{ratio}
-	:	$self->{oy} / $self->{ratio};
-	my $thumb = GD::Image->new($self->{ox}/$self->{ratio}, $self->{oy}/$self->{ratio});
+	$self->{x} = int( $self->{ox}/$self->{ratio} );
+	$self->{y} = int( $self->{oy}/$self->{ratio} );
+	my $thumb = GD::Image->new($self->{x}, $self->{y});
 	$thumb->copyResized($self->{object},0,0,0,0,
-		$self->{ox}/$self->{ratio}, $self->{oy}/$self->{ratio}, $self->{ox}, $self->{oy});
-	return $thumb, sprintf("%.0f",$self->{ox}/$self->{ratio}), sprintf("%.0f",$self->{oy}/$self->{ratio});
+		$self->{x}, $self->{y}, $self->{ox}, $self->{oy});
+	return $thumb, sprintf("%.0f",$self->{x}), sprintf("%.0f",$self->{y});
 }
 
 
 sub imagemagick_thumb { my $self=shift;
-
 	if (not $self->{object}){
 		$self->{error} = "No 'object' supplied to make thumbnail from";
 		warn $self->{error} if $self->{CHAT};
@@ -536,14 +530,13 @@ sub imagemagick_thumb { my $self=shift;
 		return undef
 	}
 	$self->_size;
-	$self->{ratio} = $self->{ox} > $self->{oy} ?
-		$self->{ox} / $self->{ratio}
-	:	$self->{oy} / $self->{ratio};
 	$self->{x} = int( $self->{ox}/$self->{ratio} );
 	$self->{y} = int( $self->{oy}/$self->{ratio} );
 
 	$self->{object}->Set(type=>'Optimize');
-	$self->{object}->Resize(width=>$self->{x}, height=>$self->{y});
+	#$self->{object}->Resize(width=>$self->{x}, height=>$self->{y});
+	$self->{object}->Thumbnail(width=>$self->{x}, height=>$self->{y});
+
 	if ($self->{depth}){
 		$self->{object}->Set('depth'=>$self->{depth});
 	}
@@ -577,16 +570,17 @@ sub set_errors { my ($self,$s) = (shift,shift);
 }
 
 sub _size { my $self = shift;
-	if (my ($maxx, $maxy) = $self->{size} =~ /^(\d+)x(\d+)$/i){
-		$self->{ratio} = $self->{ox} > $self->{oy}?
-			$maxx
-		:	$maxy;
+	my ($maxx, $maxy);
+	if (($maxx, $maxy) = $self->{size} =~ /^(\d+)x(\d+)$/i){
+		$self->{size} = ($self->{ox}>$self->{oy})? $maxx : $maxy;
 	} else {
-		$self->{ratio} = $self->{size};
+		$maxx = $maxy = $self->{size};
 	}
+	$self->{ratio} = ($self->{ox} > $self->{oy}) ? ($self->{ox}/$maxx) : ($self->{oy}/$maxy);
 }
 
 1; # Satisfy 'require'
+
 __END__
 
 
@@ -595,6 +589,8 @@ __END__
 None.
 
 =head1 CHANGES
+
+Version 0.5  (17 April 2005): fixed occasional geometry bug.
 
 Version 0.43 (17 Novemeber 2004): fixed tests, added size/geo param.
 
@@ -614,11 +610,11 @@ L<Image::GD::Thumbnail>.
 
 =head1 AUTHOR
 
-Lee Goddard <LGoddard@CPAN.org>
+Lee Goddard <cpan-at-leegoddard-dot-net>
 
 =head1 COPYRIGT
 
-Copyright (C) Lee Godadrd 2001 all rights reserved.
+Copyright (C) Lee Godadrd 2001-2005. All rights reserved.
 Supplied under the same terms as Perl itself.
 
 =cut

@@ -1,7 +1,7 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Image-Thumbnail
-version:      0.43
+version:      0.5
 version_from: Thumbnail.pm
 installdirs:  site
 requires:
