@@ -3,7 +3,7 @@ package Image::Thumbnail;
 use Carp;
 use strict;
 use warnings;
-our $VERSION = '0.5';
+our $VERSION = '0.51'; # Added Himmy's patch to return a true value for IM routine
 
 =head1 NAME
 
@@ -302,7 +302,9 @@ sub set_mod { my ($self,$try) = (shift,shift);
 
 	if ($self->{module} =~ /^GD/){
 		warn "Requiring GD" if $self->{CHAT};
-		eval ('use GD;');
+		# eval ('use GD;');
+		require GD;
+		import GD;
 		if ($@){
 			warn "Error requring GD:\n".$@;
 			return undef;
@@ -311,7 +313,9 @@ sub set_mod { my ($self,$try) = (shift,shift);
 	}
 	elsif ($self->{module} eq 'Image::Magick'){
 		warn "Requiring Image::Magick" if $self->{CHAT};
-		eval ('use Image::Magick');
+		# eval ('use Image::Magick');
+		require Image::Magick;
+		import Image::Magick;
 		if ($@){
 			warn "Error requring Image::Magick:\n".$@;
 			return undef;
@@ -551,6 +555,7 @@ sub imagemagick_thumb { my $self=shift;
 			# Catch errors?
 		}
 	}
+	return 1; # Thanks, Himmy :)
 }
 
 
@@ -589,6 +594,9 @@ __END__
 None.
 
 =head1 CHANGES
+
+Version 0.51 (13 December 2005): added Himmy's patch to return
+	true from Image::Magick routine - thanks!
 
 Version 0.5  (17 April 2005): fixed occasional geometry bug.
 
