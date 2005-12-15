@@ -5,6 +5,8 @@ README
 Thumbnail.pm
 t/gdf.t
 t/gdo.t
+t/imagero.t
+t/imagerf.t
 t/imf.t
 t/imo.t
 t/imfa.t

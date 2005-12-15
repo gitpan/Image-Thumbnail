@@ -3,18 +3,18 @@ package Image::Thumbnail;
 use Carp;
 use strict;
 use warnings;
-our $VERSION = '0.51'; # Added Himmy's patch to return a true value for IM routine
+our $VERSION = '0.6'; # Added Chris Laco's patch to support Imager
 
 =head1 NAME
 
-Image::Thumbnail - simple thumbnails with GD/ImageMagick
+Image::Thumbnail - simple thumbnails with GD/ImageMagick/Imager
 
 =head1 SYNOPSIS
 
-	use Image::Thumbnail;
+	use Image::Thumbnail 0.6;
 
 	# Create a thumbnail from 'test.jpg' as 'test_t.jpg'
-	# using ImageMagick, or GD.
+	# using ImageMagick, Imager, or GD.
 	my $t = new Image::Thumbnail(
 		size       => 55,
 		create     => 1,
@@ -34,6 +34,16 @@ Image::Thumbnail - simple thumbnails with GD/ImageMagick
 	# using GD.
 	my $t = new Image::Thumbnail(
 		module     => 'GD',
+		size       => 55,
+		create     => 1,
+		inputpath  => 'test.jpg',
+		outputpath => 'test_t.jpg',
+	);
+
+	# Create a thumbnail from 'test.jpg' as 'test_t.jpg'
+	# using Imager.
+	my $t = new Image::Thumbnail(
+		module     => 'Imager',
 		size       => 55,
 		create     => 1,
 		inputpath  => 'test.jpg',
@@ -60,7 +70,7 @@ Image::Thumbnail - simple thumbnails with GD/ImageMagick
 =head1 DESCRIPTION
 
 This module allows you to easily make thumbnail images from
-files or objects, using either the ImageMagick or GD library.
+files or objects, using either the ImageMagick, Imager or GD library.
 
 Thumbnails can be created, and either saved as image files  or
 accessed as objects: see L<create>.
@@ -71,7 +81,7 @@ version, so I made that, and then put them together in this.
 
 =head1 PREREQUISITES
 
-C<Image::Magick> or C<GD>.
+C<Image::Magick>, C<Imager> or C<GD>.
 
 =head1 CONSTRUCTOR new
 
@@ -112,12 +122,12 @@ Path to an image to use as the source file.
 
 =over 4
 
-=item module ( GD | ImageMagick )
+=item module ( GD | ImageMagick | Imager )
 
 If you wish to use a specific module, place its name here.
 You must have the module you require already installed!
 
-Supplying no name will allow ImageMagick to be tried before GD.
+Supplying no name will allow ImageMagick, then Imager to be tried before GD.
 
 =item create
 
@@ -154,7 +164,7 @@ Default value is C<96x96>.
 
 =item quality
 
-ImageMagick only: an integer from 1 to 100 to specify
+ImageMagick/Imager only: an integer from 1 to 100 to specify
 the thumbnail quality. Defaults to 50.
 
 =item attr
@@ -290,7 +300,7 @@ sub set_mod { my ($self,$try) = (shift,shift);
 		$self->{module} = $try;
 	}
 	elsif (not $self->{module} and not $try){
-		for ('Image::Magick','GD'){
+		for ('Image::Magick','Imager', 'GD'){
 			if (not $self->set_mod($_)){
 				return undef;
 			} else {
@@ -322,7 +332,18 @@ sub set_mod { my ($self,$try) = (shift,shift);
 		}
 		warn "Image::Magick OK" if $self->{CHAT};
 	}
-	else {
+	elsif ($self->{module} eq 'Imager'){
+		warn "Requiring Imager" if $self->{CHAT};
+		# eval ('use Imager');
+		require Imager;
+		import Imager;
+		if ($@){
+			warn "Error requring Imager:\n".$@;
+			return undef;
+		}
+		warn "Imager OK" if $self->{CHAT};
+	}
+    else {
 		warn "Unsupported module $self->{module}" if $self->{CHAT};
 		return undef;
 	}
@@ -365,9 +386,11 @@ sub create { my $self = shift;
 	warn "Creating thumbnail" if $self->{CHAT};
 	if ($self->{module} eq 'Image::Magick'){
 		$r = $self->create_imagemagick;
+	} elsif ($self->{module} eq 'Imager'){
+		$r = $self->create_imager;
 	} elsif ($self->{module} =~ /^(GD|GD::Image)$/){
 		$r = $self->create_gd;
-	} else {
+    } else {
 		$self->{error} = "User supplied unknown module ".$self->{module};
 		warn $self->{error};
 		$r = undef;
@@ -386,7 +409,7 @@ sub create_imagemagick { my $self=shift;
 		$self->{object} = Image::Magick->new;
 		$self->{error} = $self->{object}->Read($self->{inputpath});
 		if ($self->{error}){
-			warn "# ".$self->{error} if $self->{chat};
+			warn "# ".$self->{error} if $self->{CHAT};
 			return undef;
 		}
 	}
@@ -467,6 +490,36 @@ sub create_gd { my $self=shift;
 	return 1;
 }
 
+#
+# METHOD create_imager
+#
+sub create_imager { my $self=shift;
+	warn "...with Imager" if $self->{CHAT};
+	if (not $self->{object} or ref $self->{object} ne 'Imager'){
+		warn "...from file $self->{inputpath}" if $self->{CHAT};
+		$self->{object} = Imager->new;
+		eval {$self->{object}->read(file => $self->{inputpath})};
+
+		if ($@){
+			warn "# $@" if $self->{CHAT};
+			return undef;
+		}
+	}
+	return undef unless $self->imager_thumb;
+
+	if ($self->{outputpath}){
+		warn "Writing to $self->{outputpath}" if $self->{CHAT};
+		eval {$self->{object}->write(
+            file => $self->{outputpath}, jpegquality=>($self->{quality}||'50')
+        )};
+		if ($@) {
+			warn "# $@" if $self->{CHAT};
+			return undef;
+        };
+	}
+	warn "Done Imager: ",$self->{x}," ",$self->{y} if $self->{CHAT};
+	return 1;
+}
 
 
 #
@@ -503,7 +556,7 @@ sub get_img_type { my ($self,$handle)=(shift,shift);
 }
 
 #
-# Thumbnail generatio
+# Thumbnail generation
 #
 sub gd_thumb { my $self=shift;
 	if (not $self->{object}){
@@ -559,6 +612,31 @@ sub imagemagick_thumb { my $self=shift;
 }
 
 
+sub imager_thumb { my $self=shift;
+	if (not $self->{object}){
+		$self->{error} = "No 'object' supplied to make thumbnail from";
+		warn $self->{error} if $self->{CHAT};
+		return undef;
+	}
+	$self->{ox} = $self->{object}->getwidth;
+    $self->{oy} = $self->{object}->getheight;
+
+	if (not $self->{ox} or not $self->{oy}){
+		$self->{error} = __PACKAGE__." Could not get width/height from image";
+		warn $self->{error} if $self->{CHAT};
+		return undef
+	}
+
+	$self->_size;
+	$self->{x} = int( $self->{ox}/$self->{ratio} );
+	$self->{y} = int( $self->{oy}/$self->{ratio} );
+
+	$self->{object} = $self->{object}->scale(xpixels=>$self->{x},ypixels=>$self->{y},type=>'min');
+
+	return 1;
+}
+
+
 #
 # Interpret $s for errors and put in warnings/errors field
 #
@@ -595,30 +673,36 @@ None.
 
 =head1 CHANGES
 
-Version 0.51 (13 December 2005): added Himmy's patch to return
-	true from Image::Magick routine - thanks!
+=over 4
 
-Version 0.5  (17 April 2005): fixed occasional geometry bug.
+=item 0.6 15
 
-Version 0.43 (17 Novemeber 2004): fixed tests, added size/geo param.
+December 2005
+	- added patch from Chris Laco (CLACO) to support Imager
 
-Version 0.41 (15 January 2003): lots of bits,
-	including typo spotted by Sam Tregar.
+=item 0.51
 
-Version 0.02 (10 June 2002): added C<attr> and C<depth> fields.
+13 December 2005
+	- added Himmy's patch to return true from Image-Magick routine - thanks!
 
-Version 0.03 (10 June 2002): tardist bug fixed.
+=back
+
+Please see the file F<CHANGES> in the distribution tar.
 
 =head1 SEE ALSO
 
 L<perl>,
-L<GD>, L<Image::Magick>,
+L<GD>,
+L<Imager>,
+L<Image::Magick>,
 L<Image::Magick::Thumbnail>,
 L<Image::GD::Thumbnail>.
 
 =head1 AUTHOR
 
 Lee Goddard <cpan-at-leegoddard-dot-net>
+
+Thanks to Sam Tregar, Himmy and Chris Laco.
 
 =head1 COPYRIGT
 
