@@ -2,7 +2,7 @@ use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 
-foreach ('Image::Magick','GD'){
+foreach (qw( Image::Magick GD Imager )){
 	print "Looking for $_ ... ";
 	eval "require "."$_";
 	if ($@){
@@ -19,12 +19,12 @@ if (not $ok){
 	print <<_STOP_
 
 This module requires you have installed on your system
-either the GD or Image::Magick Perl modules.
+one of either the GD, Imager, or Image::Magick Perl modules.
 
-Please install one or the other, and try again.
+It appears you have none of these.
 
 If you feel this message to be in error, please contact
-Lee at LGoddard -at- CPAN -dot- org.
+Lee, at LGoddard-at-CPAN-dot-org.
 
 _STOP_
 

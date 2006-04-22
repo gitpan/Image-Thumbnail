@@ -3,7 +3,7 @@ package Image::Thumbnail;
 use Carp;
 use strict;
 use warnings;
-our $VERSION = '0.6'; # Added Chris Laco's patch to support Imager
+our $VERSION = '0.61'; # Updated Makefile.PL thanks to Sebastian
 
 =head1 NAME
 
@@ -77,11 +77,13 @@ accessed as objects: see L<create>.
 
 I made C<Image::GD::Thumbnail> a few years ago for myself, put it on CPAN because I need
 to get to it elsewhere and it's cheap storage. A few people asked for a ImageMagick
-version, so I made that, and then put them together in this.
+version, so I made that, and then put them together in this. However, if
+you have the chance to use C<Image::Epeg>, do try: it is highly recommended
+for its speed.
 
 =head1 PREREQUISITES
 
-C<Image::Magick>, C<Imager> or C<GD>.
+C<Image::Magick>, C<Imager>, or C<GD>.
 
 =head1 CONSTRUCTOR new
 
