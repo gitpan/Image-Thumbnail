@@ -1,6 +1,6 @@
 # imagero - Test Imager supply an object write to file
 our $VERSION = sprintf("%d.%02d", q$Revision: 0.02 $ =~ /(\d+)\.(\d+)/);
-use lib "..";
+use lib "../lib";
 use strict;
 use Test::More;
 
@@ -14,7 +14,7 @@ if ( $@) {
 } else {
 	plan tests => 7;
 }
-use_ok ("Image::Thumbnail");
+use_ok ("Image::Thumbnail" => 0.62);
 use_ok( 'Imager');
 
 SKIP: {
@@ -23,12 +23,12 @@ SKIP: {
 	ok($img->read( file=>"$cwd/test.jpg"));
 	isa_ok ($img, "Imager");
 	my $t = new Image::Thumbnail(
-	#	CHAT =>1,
-		object=>$img,
-		module => "Imager",
-		size=>55,
-		create=>1,
-		outputpath=>'test_t.jpg',
+	#	CHAT 		=> 1,
+		input		=> $img,
+		module		=> "Imager",
+		size		=> 55,
+		create		=> 1,
+		outputpath	=>'test_t.jpg',
 	);
 	isa_ok ($img, "Imager");
 	ok( $t->{x}<=55,"x");

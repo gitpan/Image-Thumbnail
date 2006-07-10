@@ -1,6 +1,6 @@
 # imf - Test GD supply an object write to file
 our $VERSION = sprintf("%d.%02d", q$Revision: 0.02 $ =~ /(\d+)\.(\d+)/);
-use lib "..";
+use lib "../lib";
 use strict;
 use Test::More;
 
@@ -14,7 +14,7 @@ if ( $@) {
 } else {
 	plan tests => 6;
 }
-use_ok ("Image::Thumbnail");
+use_ok ("Image::Thumbnail" => '0.62');
 use_ok( 'GD');
 
 SKIP: {
@@ -24,11 +24,11 @@ SKIP: {
 	isa_ok ($img, "GD::Image");
 	my $t = new Image::Thumbnail(
 	#	CHAT =>1,
-		object=>$img,
-		module => "GD",
-		size=>55,
-		create=>1,
-		outputpath=>'test_t.jpg',
+		input	=> $img,
+		module	=> "GD",
+		size	=> 55,
+		create	=> 1,
+		outputpath =>'test_t.jpg',
 	);
 	isa_ok ($img, "GD::Image");
 	ok( $t->{x}<=55,"x");

@@ -1,14 +1,16 @@
 Changes
+lib/Image/Thumbnail.pm
 Makefile.PL
 MANIFEST
+META.yml			Module meta-data (added by MakeMaker)
 README
-Thumbnail.pm
+t/gdblob.t
 t/gdf.t
 t/gdo.t
-t/imagero.t
 t/imagerf.t
+t/imagero.t
+t/imblob.t
 t/imf.t
-t/imo.t
 t/imfa.t
+t/imo.t
 t/test.jpg
-META.yml                                 Module meta-data (added by MakeMaker)

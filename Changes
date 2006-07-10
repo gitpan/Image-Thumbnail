@@ -1,3 +1,7 @@
+0.62 10 July 2006 
+	- Resolved the input params to one
+	- Added 'blob' input support 
+
 0.61 22 April 2006
 	- updated Makefile.PL thanks to Sebastian
 

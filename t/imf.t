@@ -1,7 +1,7 @@
 # imf - Test ImageMagick to/from file
 our $VERSION = sprintf("%d.%02d", q$Revision: 0.03 $ =~ /(\d+)\.(\d+)/);
 
-use lib "..";
+use lib "../lib";
 use strict;
 use Test::More;
 
@@ -15,7 +15,7 @@ if ( $@) {
 } else {
 	plan tests => 7;
 }
-use_ok ("Image::Thumbnail");
+use_ok ("Image::Thumbnail" => 0.62);
 
 ok( -e $cwd.'/test.jpg', "Test image present");
 
@@ -25,7 +25,7 @@ my $t = new Image::Thumbnail(
 #	CHAT=>1,
 	size=>55,
 	create=>1,
-	inputpath => $cwd.'test.jpg',
+	input => $cwd.'test.jpg',
 	outputpath => $cwd.'/test_t.jpg',
 );
 

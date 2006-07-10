@@ -1,5 +1,5 @@
 # imagerf - Test Imagersupply a filename write to file
-use lib "..";
+use lib "../lib";
 use strict;
 our $VERSION = sprintf("%d.%02d", q$Revision: 0.01 $ =~ /(\d+)\.(\d+)/);
 use Test::More;
@@ -14,15 +14,15 @@ if ( $@) {
 } else {
 	plan tests => 5;
 }
-use_ok ("Image::Thumbnail");
+use_ok ("Image::Thumbnail"=>0.62);
 
 my $t = new Image::Thumbnail(
 #	CHAT=>1,
-	module => "Imager",
-	inputpath => $cwd."test.jpg",
-	size=>55,
-	create=>1,
-	outputpath=> $cwd.'test_t.jpg',
+	module		=> "Imager",
+	input		=> $cwd."test.jpg",
+	size		=> 55,
+	create		=> 1,
+	outputpath	=> $cwd.'test_t.jpg',
 );
 isa_ok($t, "Image::Thumbnail");
 
