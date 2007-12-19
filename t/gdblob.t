@@ -5,15 +5,15 @@ our $VERSION = sprintf("%d.%02d", q$Revision: 0.01 $ =~ /(\d+)\.(\d+)/);
 use Test::More;
 
 BEGIN {
+	use Cwd;
+	eval'require GD';
+	if ( $@) {
+		warn;
+		plan skip_all => "Skip GD tests - GD not installed";
+	} else {
+		plan tests => 6;
+	}
 	use_ok ("Image::Thumbnail" => '0.62');
-}
-use Cwd;
-eval'require GD';
-if ( $@) {
-	warn;
-	plan skip_all => "Skip GD tests - GD not installed";
-} else {
-	plan tests => 5;
 }
 
 my $cwd = cwd."/";

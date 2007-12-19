@@ -5,8 +5,6 @@ our $VERSION = sprintf("%d.%02d", q$Revision: 0.01 $ =~ /(\d+)\.(\d+)/);
 use Test::More;
 
 use Cwd;
-my $cwd = cwd."/";
-$cwd .= 't/' if $cwd !~ /[\\\/]t[\\\/]?$/;
 
 eval'require GD';
 if ( $@) {
@@ -14,7 +12,11 @@ if ( $@) {
 } else {
 	plan tests => 6;
 }
+
 use_ok ("Image::Thumbnail" => 0.62);
+
+my $cwd = cwd."/";
+$cwd .= 't/' if $cwd !~ /[\\\/]t[\\\/]?$/;
 ok(-e $cwd."test.jpg",'test file');
 
 my $t = new Image::Thumbnail(

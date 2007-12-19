@@ -5,8 +5,6 @@ our $VERSION = sprintf("%d.%02d", q$Revision: 0.01 $ =~ /(\d+)\.(\d+)/);
 use Test::More;
 
 use Cwd;
-my $cwd = cwd."/";
-$cwd .= 't/' if $cwd !~ /[\\\/]t[\\\/]?$/;
 
 eval'require Imager';
 if ( $@) {
@@ -15,6 +13,9 @@ if ( $@) {
 	plan tests => 5;
 }
 use_ok ("Image::Thumbnail"=>0.62);
+
+my $cwd = cwd."/";
+$cwd .= 't/' if $cwd !~ /[\\\/]t[\\\/]?$/;
 
 my $t = new Image::Thumbnail(
 #	CHAT=>1,

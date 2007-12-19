@@ -5,8 +5,6 @@ use strict;
 use Test::More;
 
 use Cwd;
-my $cwd = cwd;
-$cwd .= '/t/' if $cwd !~ /[\\\/]t[\\\/]?$/;
 
 eval'use GD';
 if ( $@) {
@@ -16,6 +14,9 @@ if ( $@) {
 }
 use_ok ("Image::Thumbnail" => '0.62');
 use_ok( 'GD');
+
+my $cwd = cwd;
+$cwd .= '/t/' if $cwd !~ /[\\\/]t[\\\/]?$/;
 
 SKIP: {
 	skip "No test file at ${cwd}/test.jpg", 4 unless open IN, $cwd.'/test.jpg';

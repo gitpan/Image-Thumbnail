@@ -9,7 +9,11 @@ use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 
-foreach (qw( Image::Magick GD Imager )){
+my @m = qw( Imager GD Image::Magick );
+
+print "This module requires at least one of: ", join(",",@m),"...\n";
+
+foreach (@m){
 	print "Looking for $_ ... ";
 	eval "require "."$_";
 	if ($@){

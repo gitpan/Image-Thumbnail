@@ -6,16 +6,20 @@ use strict;
 use Test::More;
 
 use Cwd;
+
+BEGIN {
+	eval'use Image::Magick';
+	if ( $@) {
+		 plan skip_all => "Skip IM tests - IM not installed";
+	} else {
+		plan tests => 7;
+	}
+}
+
+use_ok ("Image::Thumbnail" => 0.62);
+
 my $cwd = cwd."/";
 $cwd .= 't/' if $cwd !~ /[\\\/]t[\\\/]?$/;
-
-eval'use Image::Magick';
-if ( $@) {
-	 plan skip_all => "Skip IM tests - IM not installed";
-} else {
-	plan tests => 7;
-}
-use_ok ("Image::Thumbnail" => 0.62);
 
 ok( -e $cwd.'/test.jpg', "Test image present");
 

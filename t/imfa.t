@@ -3,20 +3,23 @@ use strict;
 our $VERSION = sprintf("%d.%02d", q$Revision: 0.03 $ =~ /(\d+)\.(\d+)/);
 
 
-use lib "..";
-use Test::More;
 
-use Cwd;
+BEGIN {
+	use lib "..";
+	use Test::More;
+	use Cwd;
+
+	eval'use Image::Magick';
+	if ( $@) {
+		 plan skip_all => "Skip IM tests - IM not installed";
+	} else {
+		plan tests => 6;
+	}
+	use_ok ("Image::Thumbnail");
+}
+
 my $cwd = cwd."/";
 $cwd .= 't/' if $cwd !~ /[\\\/]t[\\\/]?$/;
-
-eval'use Image::Magick';
-if ( $@) {
-	 plan skip_all => "Skip IM tests - IM not installed";
-} else {
-	plan tests => 6;
-}
-use_ok ("Image::Thumbnail");
 
 my $t = new Image::Thumbnail(
 #	CHAT=>1,

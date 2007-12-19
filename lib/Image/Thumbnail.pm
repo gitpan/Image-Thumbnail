@@ -3,7 +3,7 @@ package Image::Thumbnail;
 use Carp;
 use strict;
 use warnings;
-our $VERSION = '0.62'; # Updated Makefile.PL thanks to Sebastian
+our $VERSION = '0.63'; # Updated $r
 
 =head1 NAME
 
@@ -714,7 +714,8 @@ sub _size { my $self = shift;
 	} else {
 		$maxx = $maxy = $self->{size};
 	}
-	$self->{ratio} = ($self->{ox} > $self->{oy}) ? ($self->{ox}/$maxx) : ($self->{oy}/$maxy);
+	# $self->{ratio} = ($self->{ox} > $self->{oy}) ? ($self->{ox}/$maxx) : ($self->{oy}/$maxy);
+	$self->{ratio} = ($self->{ox}/$maxx) > ($self->{oy}/$maxy) ? ($self->{ox}/$maxx) : ($self->{oy}/$maxy);
 }
 
 1; # Satisfy 'require'

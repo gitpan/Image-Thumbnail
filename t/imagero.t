@@ -4,18 +4,20 @@ use lib "../lib";
 use strict;
 use Test::More;
 
-use Cwd;
+BEGIN {
+	use Cwd;
+	eval'use Imager';
+	if ( $@) {
+		 plan skip_all => "Skip Imager tests - Imager not installed";
+	} else {
+		plan tests => 7;
+	}
+	use_ok ("Image::Thumbnail" => 0.62);
+	use_ok( 'Imager');
+}
+
 my $cwd = cwd;
 $cwd .= '/t/' if $cwd !~ /[\\\/]t[\\\/]?$/;
-
-eval'use Imager';
-if ( $@) {
-	 plan skip_all => "Skip Imager tests - Imager not installed";
-} else {
-	plan tests => 7;
-}
-use_ok ("Image::Thumbnail" => 0.62);
-use_ok( 'Imager');
 
 SKIP: {
 	skip "No test file at ${cwd}/test.jpg", 4 unless -e $cwd.'/test.jpg';
