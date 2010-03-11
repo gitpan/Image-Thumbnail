@@ -1,11 +1,15 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         Image-Thumbnail
-version:      0.6
-version_from: Thumbnail.pm
-installdirs:  site
-requires:
+--- #YAML:1.0
+name:                Image-Thumbnail
+version:             0.64
+abstract:            Simple thumbnails with GD/ImageMagick/Imager
+license:             ~
+author:              
+    - Lee Goddard <lgoddard -at- cpan -dot- org>
+generated_by:        ExtUtils::MakeMaker version 6.42_01
+distribution_type:   module
+requires:     
     Test::Harness:                 0.1
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.21
+    Test::More:                    0
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
+    version: 1.3

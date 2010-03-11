@@ -10,7 +10,7 @@ BEGIN {
 	if ( $@) {
 		 plan skip_all => "Skip Imager tests - Imager not installed";
 	} else {
-		plan tests => 6;
+		plan tests => 7;
 	}
 	use_ok ("Image::Thumbnail" => 0.62);
 	use_ok( 'Imager');
@@ -20,13 +20,9 @@ my $cwd = cwd;
 $cwd .= '/t/' if $cwd !~ /[\\\/]t[\\\/]?$/;
 
 SKIP: {
-
-	skip "No JPEG abaility in Imager",4 unless grep {$_ eq 'jpg'} Imager->read_types;
-
-	skip "No test file at ${cwd}/test.jpg", 4 unless -e $cwd.'/test.jpg';
-
+	skip "No test file at ${cwd}/test.bmp", 4 unless -e $cwd.'/test.bmp';
 	my $img = Imager->new;
-	ok($img->read( file=>"$cwd/test.jpg"));
+	ok($img->read( file=>"$cwd/test.bmp"));
 	isa_ok ($img, "Imager");
 	my $t = new Image::Thumbnail(
 	#	CHAT 		=> 1,
@@ -34,11 +30,11 @@ SKIP: {
 		module		=> "Imager",
 		size		=> 55,
 		create		=> 1,
-		outputpath	=>'test_t.jpg',
+		outputpath	=>'test_t.bmp',
 	);
 	isa_ok ($img, "Imager");
 	ok( $t->{x}<=55,"x");
 	ok( $t->{y}<=55,"y");
-	unlink("test_t.jpg");
+	unlink("test_t.bmp");
 };
 

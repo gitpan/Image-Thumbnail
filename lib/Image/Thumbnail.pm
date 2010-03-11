@@ -3,7 +3,7 @@ package Image::Thumbnail;
 use Carp;
 use strict;
 use warnings;
-our $VERSION = '0.63'; # Updated $r
+our $VERSION = '0.64';
 
 =head1 NAME
 
@@ -311,58 +311,69 @@ sub new { my $class = shift;
 # Sometimes self-recursive
 #
 sub set_mod { my ($self,$try) = (shift,shift);
-	warn "# Set module...".(defined $try? $try : "(not trying)") if $self->{CHAT};
+	warn "# Set module...".(defined $try? "try $try" : "(not trying)") if $self->{CHAT};
+
 	if (not $self->{module} and $self->{object}){
 		$self->{module} = ref $self->{object};
 		warn "Set module to match the supplied object: $self->{module}" if $self->{CHAT};
 	}
+
 	elsif ($try){
 		$self->{module} = $try;
 	}
+
 	elsif (not $self->{module} and not $try){
-		for ('Image::Magick','Imager', 'GD'){
+		for (qw( Image::Magick Imager GD )){
+			warn "# Try $_" if $self->{CHAT};
 			if (not $self->set_mod($_)){
+				next;
 				return undef;
 			} else {
+				warn "# Set $_" if $self->{CHAT};
 				last;
 			}
 		}
+		warn "# Using ".$self->{module} if $self->{CHAT};
 		return $self->{module};
 	}
 
 	if ($self->{module} =~ /^GD/){
 		warn "# Requiring GD" if $self->{CHAT};
-		# eval ('use GD;');
-		require GD;
-		import GD;
+		eval { require GD };
 		if ($@){
 			$self->{error} = "Error requring GD:\n".$@;
 			return undef;
 		}
+		import GD;
 		warn "# GD OK" if $self->{CHAT};
 	}
+
 	elsif ($self->{module} eq 'Image::Magick'){
 		warn "# Requiring Image::Magick" if $self->{CHAT};
-		# eval ('use Image::Magick');
-		require Image::Magick;
-		import Image::Magick;
+		eval { require Image::Magick };
 		if ($@){
 			$self->{error} = "Error requring Image::Magick:\n".$@;
 			return undef;
 		}
+		import Image::Magick;
 		warn "# Image::Magick OK" if $self->{CHAT};
 	}
+
 	elsif ($self->{module} eq 'Imager'){
 		warn "# Requiring Imager" if $self->{CHAT};
-		# eval ('use Imager');
-		require Imager;
-		import Imager;
+		eval { require Imager };
 		if ($@){
 			$self->{error} = "Error requring Imager:\n".$@;
 			return undef;
 		}
+		if (defined $self->{object}->{ERRSTR} and $self->{object}->{ERRSTR} ne ''){
+			$self->{error} = $self->{object}->{ERRSTR};
+			return undef;
+		}
+		import Imager;
 		warn "# Imager OK" if $self->{CHAT};
 	}
+
     else {
 		$self->{error} = "Unsupported module $self->{module}" if $self->{CHAT};
 		return undef;

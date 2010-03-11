@@ -10,7 +10,7 @@ eval'require Imager';
 if ( $@) {
 	 plan skip_all => "Skip Imager tests - Imager not installed";
 }
-if (not grep {$_ eq 'jpg'} Imager->read_types){
+if (not grep {$_ eq 'bmp'} Imager->read_types){
 	plan skip_all => "Skip Imager file test - No JPEG abaility in Imager";
 }
 else {
@@ -24,16 +24,16 @@ $cwd .= 't/' if $cwd !~ /[\\\/]t[\\\/]?$/;
 my $t = new Image::Thumbnail(
 #	CHAT=>1,
 	module		=> "Imager",
-	input		=> $cwd."test.jpg",
+	input		=> $cwd."test.bmp",
 	size		=> 55,
 	create		=> 1,
-	outputpath	=> $cwd.'test_t.jpg',
+	outputpath	=> $cwd.'test_t.bmp',
 );
 isa_ok($t, "Image::Thumbnail");
 
 ok( $t->{x}<=55,"x");
 ok( $t->{y}<=55, "y");
-unlink($cwd."test_t.jpg");
+unlink($cwd."test_t.bmp");
 
 isa_ok( $t->{object}, "Imager");
 

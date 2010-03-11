@@ -8,9 +8,12 @@ t/gdblob.t
 t/gdf.t
 t/gdo.t
 t/imagerf.t
+t/imagerfbmp.t
 t/imagero.t
+t/imagerobmp.t
 t/imblob.t
 t/imf.t
 t/imfa.t
 t/imo.t
 t/test.jpg
+fix.pl
