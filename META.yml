@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Image-Thumbnail
-version:            0.65
+version:            0.66
 abstract:           Simple thumbnails with various Perl libraries
 author:
     - Lee Goddard <lgoddard -at- cpan -dot- org>

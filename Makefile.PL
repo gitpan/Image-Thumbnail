@@ -9,7 +9,7 @@ use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 
-my @m = qw( Imager GD Image::Magick );
+my @m = qw( Imager GD Image::Magick Image::Epeg);
 
 print "This module requires at least one of: ", join(",",@m),"...\n";
 
