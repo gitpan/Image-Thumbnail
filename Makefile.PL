@@ -41,6 +41,8 @@ _STOP_
 
 } else {
 	WriteMakefile(
+		( MM->can( 'signature_target' ) ? ( SIGN => 1 ) : () ),
+		license( 'perl' ),
 		'NAME'		=> 'Image::Thumbnail',
 		'VERSION_FROM'	=> 'lib/Image/Thumbnail.pm', # finds $VERSION
 		'PREREQ_PM'		=> {Test::Harness=>0.1,Test::More=>0,},
@@ -49,4 +51,14 @@ _STOP_
 		   AUTHOR     => 'Lee Goddard <lgoddard -at- cpan -dot- org>') : ()),
 	);
 }
-exit;
+
+
+sub license {
+  my $lic = shift;
+  local $^W = 0;    # Silence warning about non-numeric version
+  return
+   unless $ExtUtils::MakeMaker::VERSION >= '6.31';
+  return ( LICENSE => $lic );
+}
+
+

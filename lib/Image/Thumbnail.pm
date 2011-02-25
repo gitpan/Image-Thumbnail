@@ -3,18 +3,18 @@ package Image::Thumbnail;
 use Carp;
 use strict;
 use warnings;
-our $VERSION = '0.64';
+our $VERSION = '0.65';
 
 =head1 NAME
 
-Image::Thumbnail - Simple thumbnails with GD/ImageMagick/Imager
+Image::Thumbnail - Simple thumbnails with various Perl libraries
 
 =head1 SYNOPSIS
 
-	use Image::Thumbnail 0.6;
+	use Image::Thumbnail 0.65;
 
 	# Create a thumbnail from 'test.jpg' as 'test_t.jpg'
-	# using ImageMagick, Imager, or GD.
+	# using ImageMagick, Imager, GD or Image::Epeg.
 	my $t = new Image::Thumbnail(
 		size       => 55,
 		create     => 1,
@@ -22,6 +22,7 @@ Image::Thumbnail - Simple thumbnails with GD/ImageMagick/Imager
 		outputpath => 'test_t.jpg',
 	);
 
+	# With Image Magick
 	my $t = new Image::Thumbnail(
 		size       => "55x75",
 		create     => 1,
@@ -71,15 +72,18 @@ Image::Thumbnail - Simple thumbnails with GD/ImageMagick/Imager
 
 This module was created to answer the FAQ, 'How do I simply create a
 thumbnail with pearl?' (I<sic>). It allows you to easily make thumbnail images
-from files, objects or 'blobs', using either the ImageMagick, Imager or
-GD libraries.
+from files, objects or (in most cases) 'blobs', using either the ImageMagick, 
+C<Image::Epeg>, Imager or GD libraries.
 
 Thumbnails created can either be saved as image files or accessed as objects
-via the C<object> field: see L<create>.
+via the C<object> field: see L</create>.
+
+In the experience of the author, thumbnails are created fastest
+with direct use of the L<Image::Epeg> module.
 
 =head1 PREREQUISITES
 
-One of C<Image::Magick>, C<Imager>, or C<GD>.
+One of C<Image::Magick>, C<Imager>, L<Image::Epeg>, or C<GD>.
 
 =head1 CONSTRUCTOR new
 
@@ -129,7 +133,7 @@ be removed.
 
 =over 4
 
-=item module ( GD | ImageMagick | Imager )
+=item module ( GD | Image::Magick | Imager | Image::JPEG)
 
 If you wish to use a specific module, place its name here.
 You must have the module you require already installed!
@@ -156,7 +160,7 @@ the output file format defaults to C<jpeg>.
 
 =item depth
 
-Sets colour depth in ImageMagick - GD only supports 8-bit.
+Sets colour depth in ImageMagick - AFAIK GD only supports 8-bit.
 
 The ImageMagick manpage (see L<http://www.imagemagick.org/www/ImageMagick.html#opti>).
 says:
@@ -323,7 +327,7 @@ sub set_mod { my ($self,$try) = (shift,shift);
 	}
 
 	elsif (not $self->{module} and not $try){
-		for (qw( Image::Magick Imager GD )){
+		for (qw( Image::Epeg Image::Magick Imager GD )){
 			warn "# Try $_" if $self->{CHAT};
 			if (not $self->set_mod($_)){
 				next;
@@ -337,7 +341,18 @@ sub set_mod { my ($self,$try) = (shift,shift);
 		return $self->{module};
 	}
 
-	if ($self->{module} =~ /^GD/){
+	if ($self->{module} eq 'Image::Epeg'){
+		warn "# Requiring Image::Epeg" if $self->{CHAT};
+		eval { require Image::Epeg };
+		if ($@){
+			$self->{error} = "Error requring Image::Epeg:\n".$@;
+			return undef;
+		}
+		import Image::Epeg;
+		warn "# Image::Epeg OK" if $self->{CHAT};
+	}
+
+	elsif ($self->{module} =~ /^GD/){
 		warn "# Requiring GD" if $self->{CHAT};
 		eval { require GD };
 		if ($@){
@@ -360,7 +375,7 @@ sub set_mod { my ($self,$try) = (shift,shift);
 	}
 
 	elsif ($self->{module} eq 'Imager'){
-		warn "# Requiring Imager" if $self->{CHAT};
+		warn "# Requiring Imager ..." if $self->{CHAT};
 		eval { require Imager };
 		if ($@){
 			$self->{error} = "Error requring Imager:\n".$@;
@@ -415,13 +430,19 @@ Returns c<undef> on failure.
 sub create { my $self = shift;
 	my $r;
 	warn "# Creating thumbnail" if $self->{CHAT};
-	if ($self->{module} eq 'Image::Magick'){
+	if ($self->{module} eq 'Image::Epeg'){
+		$r = $self->create_epeg;
+	} 
+	elsif ($self->{module} eq 'Image::Magick'){
 		$r = $self->create_imagemagick;
-	} elsif ($self->{module} eq 'Imager'){
+	} 
+	elsif ($self->{module} eq 'Imager'){
 		$r = $self->create_imager;
-	} elsif ($self->{module} =~ /^(GD|GD::Image)$/){
+	} 
+	elsif ($self->{module} =~ /^(GD|GD::Image)$/){
 		$r = $self->create_gd;
-    } else {
+    } 
+    else {
 		$self->{error} = "User supplied unknown module ".$self->{module};
 		warn $self->{error};
 		$r = undef;
@@ -554,12 +575,16 @@ sub create_imager { my $self=shift;
 		warn "...from file $self->{inputpath}" if $self->{CHAT};
 		$self->{object} = Imager->new;
 		eval {$self->{object}->read(file => $self->{inputpath})};
-
 		if ($@){
 			$self->{error} = $@ if $self->{CHAT};
 			return undef;
 		}
+		if ($self->{object}->errstr){
+			$self->{error} = $self->{object}->errstr;
+			return undef;
+		}
 	}
+
 	return undef unless $self->imager_thumb;
 
 	if ($self->{outputpath}){
@@ -576,6 +601,39 @@ sub create_imager { my $self=shift;
 	return 1;
 }
 
+
+#
+# METHOD create_epeg
+#
+sub create_epeg { my $self=shift;
+	warn "# ...with Image::Epeg" if $self->{CHAT};
+	if (not $self->{object} or ref $self->{object} ne 'Image::Epeg'){
+		warn "...from file $self->{inputpath}" if $self->{CHAT};
+		eval {
+			$self->{object} = Image::Epeg->new( $self->{inputpath})
+		};
+		if ($@){
+			$self->{error} = $@ if $self->{CHAT};
+			return undef;
+		}
+	}
+
+	return undef unless $self->epeg_thumb;
+
+	if ($self->{outputpath}){
+		warn "Writing to $self->{outputpath}" if $self->{CHAT};
+		eval {
+			$self->{object}->set_quality( $self->{quality} || 50 );
+			$self->{object}->write_file( $self->{outputpath} )
+		};
+		if ($@) {
+			$self->{error} = $@ if $self->{CHAT};
+			return undef;
+        };
+	}
+	warn "# Done Image::Epeg: ",$self->{x}," ",$self->{y} if $self->{CHAT};
+	return 1;
+}
 
 #
 # Sets our inputtype field to the file type (jpeg, etc)
@@ -644,6 +702,20 @@ sub gd_thumb { my $self=shift;
 }
 
 
+sub epeg_thumb { my $self=shift;
+	if (not $self->{object}){
+		$self->{error} = "No 'object' supplied to make thumbnail from";
+		return undef;
+	}
+	$self->{ox} = $self->{object}->get_width();
+	$self->{oy} = $self->{object}->get_height();
+	$self->_size;
+	$self->{x} = int( $self->{ox}/$self->{ratio} );
+	$self->{y} = int( $self->{oy}/$self->{ratio} );
+	my $thumb = $self->{object}->resize( $self->{x}, $self->{y});
+	return $thumb, sprintf("%.0f",$self->{x}), sprintf("%.0f",$self->{y});
+}
+
 sub imagemagick_thumb { my $self=shift;
 	if (not $self->{object}){
 		$self->{error} = "No 'object' supplied to make thumbnail from";
@@ -680,7 +752,8 @@ sub imagemagick_thumb { my $self=shift;
 }
 
 
-sub imager_thumb { my $self=shift;
+sub imager_thumb { 
+	my $self=shift;
 	if (not $self->{object}){
 		$self->{error} = "No 'object' supplied to make thumbnail from";
 		return undef;
@@ -689,8 +762,8 @@ sub imager_thumb { my $self=shift;
     $self->{oy} = $self->{object}->getheight;
 
 	if (not $self->{ox} or not $self->{oy}){
-		$self->{error} = __PACKAGE__." Could not get width/height from image";
-		return undef
+		$self->{error} = __PACKAGE__." Could not get width/height from imager";
+		return undef;
 	}
 
 	$self->_size;
@@ -740,7 +813,7 @@ None.
 
 =head1 CHANGES
 
-Please see the file F<CHANGES> in the distribution tar.
+Please see the file F<CHANGES> included with the distribution.
 
 =head1 SEE ALSO
 
@@ -750,7 +823,8 @@ L<GD>,
 L<Imager>,
 L<Image::Magick>,
 L<Image::Magick::Thumbnail>,
-L<Image::GD::Thumbnail>.
+L<Image::GD::Thumbnail>,
+L<Image::Epeg>.
 
 =head1 AUTHOR
 

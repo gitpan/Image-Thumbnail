@@ -1,6 +1,6 @@
-# imagero - Test Imager supply an object write to file
+# imagerobmp - Test Imager supply an object write to file
 our $VERSION = sprintf("%d.%02d", q$Revision: 0.02 $ =~ /(\d+)\.(\d+)/);
-use lib "../lib";
+use lib qw(lib ../lib);
 use strict;
 use Test::More;
 
@@ -12,7 +12,7 @@ BEGIN {
 	} else {
 		plan tests => 7;
 	}
-	use_ok ("Image::Thumbnail" => 0.62);
+	use_ok ("Image::Thumbnail" => 0.65);
 	use_ok( 'Imager');
 }
 

@@ -15,5 +15,8 @@ t/imblob.t
 t/imf.t
 t/imfa.t
 t/imo.t
+t/test.bmp
+t/test.gif
 t/test.jpg
-fix.pl
+
+SIGNATURE                                Public-key signature (added by MakeMaker)
